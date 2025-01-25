@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_17h5o2d" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.29.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.22.0">
+  <bpmn:collaboration id="Collaboration_1lhmoaj">
+    <bpmn:participant id="Participant_17h8ezn" processRef="recruitment_process" />
+  </bpmn:collaboration>
+  <bpmn:process id="recruitment_process" isExecutable="true">
+    <bpmn:startEvent id="Event_0sxk516">
+      <bpmn:outgoing>Flow_1sqzg40</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="initial_interview_task" name="Initial Interview by Recruiter" camunda:formRef="initial_interview_form" camunda:formRefBinding="latest" camunda:assignee="${initial_interviewer}">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_1sqzg40</bpmn:incoming>
+      <bpmn:outgoing>Flow_1bapvbx</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="initial_interview_gateway" name="Initial Interview Decision?">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_1bapvbx</bpmn:incoming>
+      <bpmn:outgoing>initial_review_rejected_flow</bpmn:outgoing>
+      <bpmn:outgoing>initial_review_approved_flow</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="final_interview_task" name="Final Interview by Hiring Manager" camunda:formRef="final_interview_form" camunda:formRefBinding="latest" camunda:assignee="${next_interviewer}">
+      <bpmn:incoming>technical_interview_approved_flow</bpmn:incoming>
+      <bpmn:outgoing>Flow_1i43si9</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="technical_interview_task" name="Technical Interview by Software Engineer" camunda:formRef="technical_interview_form" camunda:formRefBinding="latest" camunda:candidateGroups="${next_interviewer}">
+      <bpmn:incoming>initial_review_approved_flow</bpmn:incoming>
+      <bpmn:outgoing>Flow_1mp014f</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_18y5au8" name="Technical Interview Decision?">
+      <bpmn:incoming>Flow_1mp014f</bpmn:incoming>
+      <bpmn:outgoing>technical_interview_rejected_flow</bpmn:outgoing>
+      <bpmn:outgoing>technical_interview_approved_flow</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_0eijjp2" name="Final Interview Decision?">
+      <bpmn:incoming>Flow_1i43si9</bpmn:incoming>
+      <bpmn:outgoing>final_interview_rejected_flow</bpmn:outgoing>
+      <bpmn:outgoing>final_interview_approved_flow</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_130wtos">
+      <bpmn:incoming>Flow_1hzi603</bpmn:incoming>
+      <bpmn:incoming>Flow_0zid6wk</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="congratulate_candidate_task" name="Send Offer Letter">
+      <bpmn:incoming>final_interview_approved_flow</bpmn:incoming>
+      <bpmn:outgoing>Flow_0zid6wk</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="reject_candidate_task" name="Send Rejection Letter">
+      <bpmn:incoming>final_interview_rejected_flow</bpmn:incoming>
+      <bpmn:incoming>technical_interview_rejected_flow</bpmn:incoming>
+      <bpmn:incoming>initial_review_rejected_flow</bpmn:incoming>
+      <bpmn:outgoing>Flow_1hzi603</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_1sqzg40" sourceRef="Event_0sxk516" targetRef="initial_interview_task" />
+    <bpmn:sequenceFlow id="Flow_1bapvbx" sourceRef="initial_interview_task" targetRef="initial_interview_gateway" />
+    <bpmn:sequenceFlow id="initial_review_rejected_flow" name="Rejected" sourceRef="initial_interview_gateway" targetRef="reject_candidate_task">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${recruitment_decision == 'reject'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="initial_review_approved_flow" name="Approved" sourceRef="initial_interview_gateway" targetRef="technical_interview_task">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${recruitment_decision == 'approve'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="technical_interview_approved_flow" name="Approved" sourceRef="Gateway_18y5au8" targetRef="final_interview_task">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${recruitment_decision == 'approve'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1i43si9" sourceRef="final_interview_task" targetRef="Gateway_0eijjp2" />
+    <bpmn:sequenceFlow id="Flow_1mp014f" sourceRef="technical_interview_task" targetRef="Gateway_18y5au8" />
+    <bpmn:sequenceFlow id="technical_interview_rejected_flow" name="Rejected" sourceRef="Gateway_18y5au8" targetRef="reject_candidate_task">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${recruitment_decision == 'reject'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="final_interview_rejected_flow" name="Rejected" sourceRef="Gateway_0eijjp2" targetRef="reject_candidate_task">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${recruitment_decision == 'reject'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="final_interview_approved_flow" name="Approved" sourceRef="Gateway_0eijjp2" targetRef="congratulate_candidate_task">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${recruitment_decision == 'approve'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1hzi603" sourceRef="reject_candidate_task" targetRef="Event_130wtos" />
+    <bpmn:sequenceFlow id="Flow_0zid6wk" sourceRef="congratulate_candidate_task" targetRef="Event_130wtos" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1lhmoaj">
+      <bpmndi:BPMNShape id="Participant_17h8ezn_di" bpmnElement="Participant_17h8ezn" isHorizontal="true">
+        <dc:Bounds x="120" y="80" width="1360" height="470" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0sxk516_di" bpmnElement="Event_0sxk516">
+        <dc:Bounds x="182" y="242" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0wl9n8f_di" bpmnElement="initial_interview_task">
+        <dc:Bounds x="270" y="220" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1gr4mre_di" bpmnElement="initial_interview_gateway" isMarkerVisible="true">
+        <dc:Bounds x="425" y="235" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="414" y="205" width="74" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1li6fna_di" bpmnElement="final_interview_task">
+        <dc:Bounds x="830" y="220" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0i3x302_di" bpmnElement="technical_interview_task">
+        <dc:Bounds x="550" y="220" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_18y5au8_di" bpmnElement="Gateway_18y5au8" isMarkerVisible="true">
+        <dc:Bounds x="725" y="235" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="728" y="205" width="49" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0eijjp2_di" bpmnElement="Gateway_0eijjp2" isMarkerVisible="true">
+        <dc:Bounds x="985" y="235" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="974" y="205" width="72" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_130wtos_di" bpmnElement="Event_130wtos">
+        <dc:Bounds x="1272" y="242" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0jbq0i1_di" bpmnElement="congratulate_candidate_task">
+        <dc:Bounds x="1100" y="220" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0fnb6rm_di" bpmnElement="reject_candidate_task">
+        <dc:Bounds x="1110" y="450" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1sqzg40_di" bpmnElement="Flow_1sqzg40">
+        <di:waypoint x="218" y="260" />
+        <di:waypoint x="270" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1bapvbx_di" bpmnElement="Flow_1bapvbx">
+        <di:waypoint x="370" y="260" />
+        <di:waypoint x="425" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ytwvex_di" bpmnElement="initial_review_rejected_flow">
+        <di:waypoint x="450" y="285" />
+        <di:waypoint x="450" y="490" />
+        <di:waypoint x="1110" y="490" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="439" y="381" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1e2fy46_di" bpmnElement="initial_review_approved_flow">
+        <di:waypoint x="475" y="260" />
+        <di:waypoint x="550" y="260" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="489" y="242" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0wlicqa_di" bpmnElement="technical_interview_approved_flow">
+        <di:waypoint x="775" y="260" />
+        <di:waypoint x="830" y="260" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="779" y="242" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1i43si9_di" bpmnElement="Flow_1i43si9">
+        <di:waypoint x="930" y="260" />
+        <di:waypoint x="985" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1mp014f_di" bpmnElement="Flow_1mp014f">
+        <di:waypoint x="650" y="260" />
+        <di:waypoint x="725" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09o3sdo_di" bpmnElement="technical_interview_rejected_flow">
+        <di:waypoint x="750" y="285" />
+        <di:waypoint x="750" y="470" />
+        <di:waypoint x="1110" y="470" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="739" y="371" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0p056hj_di" bpmnElement="final_interview_rejected_flow">
+        <di:waypoint x="1010" y="285" />
+        <di:waypoint x="1010" y="420" />
+        <di:waypoint x="1160" y="420" />
+        <di:waypoint x="1160" y="450" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1063" y="402" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1arce8y_di" bpmnElement="final_interview_approved_flow">
+        <di:waypoint x="1035" y="260" />
+        <di:waypoint x="1100" y="260" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1044" y="242" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1hzi603_di" bpmnElement="Flow_1hzi603">
+        <di:waypoint x="1210" y="490" />
+        <di:waypoint x="1241" y="490" />
+        <di:waypoint x="1241" y="260" />
+        <di:waypoint x="1272" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zid6wk_di" bpmnElement="Flow_0zid6wk">
+        <di:waypoint x="1200" y="260" />
+        <di:waypoint x="1272" y="260" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

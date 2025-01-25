@@ -1,0 +1,60 @@
+{
+  "components": [
+    {
+      "label": "Recruitment Decision",
+      "values": [
+        {
+          "label": "Approve",
+          "value": "approve"
+        },
+        {
+          "label": "Reject",
+          "value": "reject"
+        }
+      ],
+      "type": "radio",
+      "layout": {
+        "row": "Row_1i2q6s4",
+        "columns": null
+      },
+      "id": "Field_0u0n9wa",
+      "key": "recruitment_decision",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "label": "Select",
+      "type": "select",
+      "layout": {
+        "row": "Row_1jidg43",
+        "columns": null
+      },
+      "id": "Field_0z8gsou",
+      "key": "list_of_next_interviewers",
+      "valuesExpression": "=split(interviewer_names, \",\")"
+    },
+    {
+      "label": "Next Interviewer",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0s7z40f",
+        "columns": null
+      },
+      "id": "Field_15v92wr",
+      "key": "next_interviewer",
+      "conditional": {
+        "hide": "=recruitment_decision = \"reject\" or recruitment_decision = null"
+      }
+    }
+  ],
+  "type": "default",
+  "id": "initial_interview_form",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.29.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.22.0",
+  "schemaVersion": 17
+}
