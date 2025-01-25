@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+
+  camunda:
+    build: .
+    ports:
+      - "8088:8080"
+    volumes:
+      - ./default.yml:/camunda/configuration/default.yml
+    depends_on:
+      - postgres
+      - keycloak
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.4
+    command: ["start-dev"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_PORT: 5432
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres

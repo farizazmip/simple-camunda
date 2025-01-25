@@ -1,0 +1,35 @@
+camunda.bpm:
+  authorization.enabled: true
+  generic-properties:
+    properties:
+      enforceHistoryTimeToLive: false
+      javaSerializationFormatEnabled: true
+  run:
+    auth.enabled: true
+    cors:
+      enabled: true
+      allowed-origins: "*"
+
+spring.datasource:
+  url: jdbc:postgresql://postgres:5432/camunda
+  driver-class-name: org.postgresql.Driver
+  username: postgres
+  password: postgres
+
+keycloak:
+  host: http://keycloak:8080
+  realm: camunda
+  client:
+    id: camunda-identity-service
+    secret: oWis4n7PLPem9R7h32fH64x51Ok2utrT
+
+plugin.identity.keycloak:
+  keycloakIssuerUrl: ${keycloak.host}/realms/${keycloak.realm}
+  keycloakAdminUrl: ${keycloak.host}/admin/realms/${keycloak.realm}
+  clientId: ${keycloak.client.id}
+  clientSecret: ${keycloak.client.secret}
+  useEmailAsCamundaUserId: false
+  useUsernameAsCamundaUserId: true
+  useGroupPathAsCamundaGroupId: true
+  administratorGroupName: camunda-admin
+  disableSSLCertificateValidation: true
