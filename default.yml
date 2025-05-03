@@ -5,7 +5,7 @@ camunda.bpm:
       enforceHistoryTimeToLive: false
       javaSerializationFormatEnabled: true
   run:
-    auth.enabled: true
+    auth.enabled: false
     cors:
       enabled: true
       allowed-origins: "*"
