@@ -1,0 +1,33 @@
+{
+  "components": [
+    {
+      "label": "Document Approval Decision",
+      "values": [
+        {
+          "label": "Approved",
+          "value": "approved"
+        },
+        {
+          "label": "Rejected",
+          "value": "rejected"
+        }
+      ],
+      "type": "radio",
+      "layout": {
+        "row": "Row_12uhm5t",
+        "columns": null
+      },
+      "id": "Field_0pfrv4w",
+      "key": "document_approval_decision"
+    }
+  ],
+  "type": "default",
+  "id": "document_approval_form",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.29.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.22.0",
+  "schemaVersion": 17
+}
