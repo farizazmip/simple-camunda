@@ -16,7 +16,6 @@ import {
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloseIcon from '@mui/icons-material/Close';
-import axios from 'axios';
 
 const Submission = ({ currentUser }) => {
   const [file, setFile] = useState(null);
@@ -25,16 +24,6 @@ const Submission = ({ currentUser }) => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [openModal, setOpenModal] = useState(false);
-
-  // SharePoint configuration - replace with your values
-  const sharepointConfig = {
-    tenantId: 'tenantId',
-    clientId: 'clientId',
-    clientSecret: 'clientSecret',
-    siteId: 'siteId',
-    driveId: 'driveId',
-    folderPath: 'folderPath' // Base folder where files will be uploaded
-  };
 
   useEffect(() => {
     if (currentUser) setApprover(currentUser.username || currentUser.name || '');
@@ -63,51 +52,13 @@ const Submission = ({ currentUser }) => {
     setOpenModal(false);
   };
 
-  const getSharePointAccessToken = async () => {
-    const url = `https://login.microsoftonline.com/${sharepointConfig.tenantId}/oauth2/v2.0/token`;
-    
-    const params = new URLSearchParams();
-    params.append('grant_type', 'client_credentials');
-    params.append('client_id', sharepointConfig.clientId);
-    params.append('client_secret', sharepointConfig.clientSecret);
-    params.append('scope', 'https://graph.microsoft.com/.default');
-
-    try {
-      const response = await axios.post(url, params);
-      return response.data.access_token;
-    } catch (error) {
-      console.error('Error getting SharePoint access token:', error.response?.data || error.message);
-      throw new Error('Failed to authenticate with SharePoint');
-    }
-  };
-
-  const uploadFileToSharePoint = async (accessToken, file) => {
-    // Create a unique filename to prevent collisions
-    const timestamp = Date.now();
-    const fileExtension = file.name.split('.').pop();
-    const uniqueFilename = `${file.name.replace(`.${fileExtension}`, '')}_${timestamp}.${fileExtension}`;
-    
-    const url = `https://graph.microsoft.com/v1.0/sites/${sharepointConfig.siteId}/drives/${sharepointConfig.driveId}/root:/${sharepointConfig.folderPath}/${uniqueFilename}:/content`;
-    
-    const config = {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/octet-stream'
-      }
-    };
-
-    try {
-      const response = await axios.put(url, file, config);
-      return {
-        fileId: response.data.id,
-        fileName: uniqueFilename,
-        webUrl: response.data.webUrl,
-        downloadUrl: response.data['@microsoft.graph.downloadUrl']
-      };
-    } catch (error) {
-      console.error('Error uploading file to SharePoint:', error.response?.data || error.message);
-      throw new Error('Failed to upload file to SharePoint');
-    }
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = error => reject(error);
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleSubmit = async (decision) => {
@@ -122,13 +73,7 @@ const Submission = ({ currentUser }) => {
         return;
       }
 
-      // 1. Get SharePoint access token
-      const accessToken = await getSharePointAccessToken();
-      
-      // 2. Upload file to SharePoint
-      const sharepointFile = await uploadFileToSharePoint(accessToken, file);
-
-      // 3. Start the Camunda process with metadata only
+      // 1. Start the process instance
       const processResponse = await fetch(
         'http://localhost:8088/engine-rest/process-definition/key/document_approval_process/start',
         {
@@ -141,10 +86,16 @@ const Submission = ({ currentUser }) => {
                 type: "String" 
               },
               approver: { value: approver, type: "String" },
-              fileName: { value: sharepointFile.fileName, type: "String" },
-              fileId: { value: sharepointFile.fileId, type: "String" },
-              fileWebUrl: { value: sharepointFile.webUrl, type: "String" },
-              fileDownloadUrl: { value: sharepointFile.downloadUrl, type: "String" },
+              fileName: { value: file.name, type: "String" },
+              fileContent: {
+                value: await convertToBase64(file),
+                type: "Bytes",
+                valueInfo: { 
+                  filename: file.name, 
+                  mimeType: file.type,
+                  encoding: "base64"
+                }
+              },
               document_creation_decision: { value: "submitted", type: "String" }
             },
             businessKey: `submission_${Date.now()}`
@@ -155,7 +106,7 @@ const Submission = ({ currentUser }) => {
       if (!processResponse.ok) throw new Error('Failed to start process');
       const processData = await processResponse.json();
 
-      // 4. Find and complete the Document Creation task
+      // 2. Find and complete the Document Creation task
       const tasksResponse = await fetch(
         `http://localhost:8088/engine-rest/task?processInstanceId=${processData.id}&taskDefinitionKey=document_creation_task`
       );
@@ -186,7 +137,7 @@ const Submission = ({ currentUser }) => {
       console.error('Submission error:', err);
       setError(err.message.includes('too large') 
         ? 'File is too large. Max size: 10MB' 
-        : err.message || 'Submission failed. Please try again.');
+        : 'Submission failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

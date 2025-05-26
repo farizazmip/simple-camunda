@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import Submission from './pages/Submission';
 import Approval from './pages/Approval';
-import ApprovalDetail from './pages/ApprovalDetail';
 import History from './pages/History';
 import NavBar from './components/NavBar';
-import ApprovalDetailNoSharePoint from './pages/ApprovalDetailNoSharePoint';
-import SubmissionNoSharePoint from './pages/SubmissionNoSharePoint';
+import ApprovalDetail from './pages/ApprovalDetail';
+import Submission from './pages/Submission';
 
 const theme = createTheme();
 
@@ -51,20 +49,20 @@ function App() {
         <Routes>
           <Route 
             path="/submission" 
-            element={<SubmissionNoSharePoint currentUser={currentUser} />} 
+            element={<Submission currentUser={currentUser} />} 
           />
           <Route 
             path="/approval" 
             element={<Approval currentUser={currentUser} />} 
           />
-          <Route path="/approval/:approval_id" element={<ApprovalDetailNoSharePoint />} />
+          <Route path="/approval/:approval_id" element={<ApprovalDetail />} />
           <Route 
             path="/history" 
             element={<History currentUser={currentUser} />} 
           />
           <Route 
             path="/" 
-            element={<SubmissionNoSharePoint currentUser={currentUser} />} 
+            element={<Submission currentUser={currentUser} />} 
           />
         </Routes>
       </Router>
