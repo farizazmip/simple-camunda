@@ -6,6 +6,7 @@ import History from './pages/History';
 import NavBar from './components/NavBar';
 import ApprovalDetail from './pages/ApprovalDetail';
 import Submission from './pages/Submission';
+import BlobStorage from './pages/BlobStorage';
 
 const theme = createTheme();
 
@@ -47,6 +48,10 @@ function App() {
           onUserChange={handleUserChange} 
         />
         <Routes>
+          <Route 
+            path="/blob" 
+            element={<BlobStorage />} 
+          />
           <Route 
             path="/submission" 
             element={<Submission currentUser={currentUser} />} 
